@@ -1,7 +1,8 @@
 import { text } from "stream/consumers";
 import { setup, createActor, fromPromise, assign } from "xstate";
 
-const FURHATURI =  "192.168.1.11:54321" // "127.0.0.1:54321";
+const FURHATURI =  "127.0.0.1:54321";
+//"192.168.1.11:54321" 
 
 async function getRandomFromList(list: string[]): Promise<string> {
   const randomIndex = Math.floor(Math.random() * list.length);
@@ -14,13 +15,11 @@ function getRandomFunction(funcs: (() => Promise<any>)[]): Promise<any> {
 }
 const listen_gestures = ['Nod', 'Smile', 'Thoughtful']
 
+const acknowledgements = ["https://furhat-audio.s3.eu-north-1.amazonaws.com/okay.wav", "https://furhat-audio.s3.eu-north-1.amazonaws.com/uh+huh.wav", "https://furhat-audio.s3.eu-north-1.amazonaws.com/yes.wav", "https://furhat-audio.s3.eu-north-1.amazonaws.com/hm.wav"]
+
 const initial_prompt = `
-You are an interview coach helping the user prepare for an upcoming interview. 
-Please, be brief when talking. You need to explain your purpose. You need to first ask the user what field of employment they are interested in.
-Please ask the user questions about their personal traits and soft skills but not technical skills . 
-Try to ask questions like "tell me a little bit about yourself","what is your strongest attribute", "tell me one time you worked in stress/in a team, one time you failed in a task,you had to persuade someone,where do you see yourself in 5 years etc. 
-If the user asks for help please give some guidelines in a few words.
-If the user changes the topic please remind them what you are doing. Don't forget to be brief.` ;
+You are an interview coach helping the user prepare for an upcoming interview. Your goal is to help them answer questions about their personal traits and soft skills. 
+Please, be brief when talking. You need to explain your purpose. You need to first ask the user what field of employment they are interested in. If the user doesn't answer repeat the question. Please refrain from using emojis.` ;
 
 
 interface Message {
@@ -35,12 +34,39 @@ async function fhSound(url: string) {
   return fetch(`http://${FURHATURI}/furhat/say?url=${encText}&blocking=false`, {
     method: "POST",
     headers: myHeaders,
-    body: JSON.stringify({
-      "frames": [
-        {
-          "time": [1.0, 1.2],
-          "persist": true, }  ]})
+    body: ""
   });
+}
+
+async function fhListenTimeout(timeout=8000) {  // Default timeout is 5000 milliseconds (5 seconds)
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const fetchTimeout = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(`http://${FURHATURI}/furhat/listen`, {
+      method: "GET",
+      headers: myHeaders,
+      signal: signal
+    });
+
+    const body = await response.body;
+    const reader = body.getReader();
+    const { value } = await reader.read();
+    const message = JSON.parse(new TextDecoder().decode(value)).message;
+
+    clearTimeout(fetchTimeout);
+    return message;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Fetch request timed out');
+    }
+    throw error;
+  }
 }
 
 async function fhSay(text: string) {
@@ -148,25 +174,21 @@ const dmMachine = setup({
         model: "gemma2",
         messages : input.prompt,
         stream: false,
-        temperature : 0.3
+        temperature : 0.5
       };
       return fetch("http://localhost:11434/api/chat", {
         method: "POST",
         body: JSON.stringify(body),
       }).then((response) => response.json());
    } ), 
-    fhHello: fromPromise<any, null>(async () => {
-      return fhSay("Hi");
-    }),
     Attend : fromPromise<any, null>(async () => {
       return fhGetUser(); 
     }) ,
     fhL: fromPromise<any, null>(async () => {
      return Promise.all([
       fhAttend() ,
-      fhListen(),
-      fhSound("https://furhat-audio.s3.eu-north-1.amazonaws.com/110853-Male_mouth_makes_tch_tch_tch_sound_effect-Nightingale_Music_Productions-12655.wav"),
-      
+      fhListenTimeout(),
+      getRandomFromList(acknowledgements)
      ])
    }),
    ListenCarefully: fromPromise<any, null>(async () => {
@@ -175,13 +197,6 @@ const dmMachine = setup({
    fhGesture : fromPromise<any,any>(async () => {
    return getRandomFunction([() => getRandomFromList(listen_gestures), ListeningCarefully]);
    }),
-   fhSound : fromPromise<any, null> (async () => {
-    return fromPromise.call([
-      fhGesture('Shake'),
-      fhSound("https://furhat-audio.s3.eu-north-1.amazonaws.com/110853-Male_mouth_makes_tch_tch_tch_sound_effect-Nightingale_Music_Productions-12655.wav"),
-      fhAttend()
-    ])
-  }), 
    fhSpeakG: fromPromise<any, { text: string}>(async ({ input }) => {
     return Promise.all([
       fhAttend() ,
@@ -193,6 +208,7 @@ const dmMachine = setup({
   context: ({}) => ({
     count: 0,
     messages: [],
+    field : 0
   }),
   id: "root",
   initial: "Start",
@@ -237,10 +253,44 @@ const dmMachine = setup({
       invoke: {
         src: "fhSpeakG",
         input: ({context}) => ({text :` ${context.messages[context.messages.length -1].content} `}),
-        onDone: {
-          target : "ListenAnswer",
-          actions: ({ event }) => console.log(event.output),
+        onDone: [ 
+          {guard: ({context}) => context.field === 0 , target: "ListenField" },
+          {target : "ListenAnswer",
+          actions: ({ event }) => console.log(event.output)},
+          ],
+        onError: {
+          target: "Fail",
+          actions: ({ event }) => console.error(event),
         },
+      },
+    },
+    ListenField: {
+      invoke: {
+        src: "fhL",
+        onDone: {
+          target: "Recognised",
+          actions: [({ event }) => console.log(event.output),
+            assign(({context,event}) => {
+              return {
+                messages : [
+                  ...context.messages,
+                  {role : "user",
+                  content : `The field the user is interesting in is ${event.output[1]}. As an interviewer please ask the user questions about their personal traits and soft skills but not technical skills about the field . 
+                            Try to ask questions like "tell me a little bit about yourself","what is your strongest attribute", "tell me one time you worked in stress/in a team, one time you failed in a task,you had to persuade someone,where do you see yourself in 5 years etc. 
+                            If the user doesn't answer repeat the question.
+                            If the user asks for help please give some guidelines.
+                            If the user changes the topic please remind them what you are doing. Don't forget to be brief. `,
+                  }
+                ]
+              }
+            }),
+            assign(({context})=> {
+              return {
+                field : context.field +=1 
+              }
+            } ) ,
+            ({context}) => console.log(context.messages)
+        ]},
         onError: {
           target: "Fail",
           actions: ({ event }) => console.error(event),
@@ -301,7 +351,7 @@ const dmMachine = setup({
         },
       },
     },
-    Fail: {},
+  Fail : {},
   },
 });
 
