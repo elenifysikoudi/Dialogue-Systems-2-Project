@@ -15,13 +15,13 @@ function getRandomFunction(funcs: (() => Promise<any>)[]): Promise<any> {
 }
 const listen_gestures = ['Nod', 'Smile', 'Thoughtful']
 
-const acknowledgements = ["https://furhat-audio.s3.eu-north-1.amazonaws.com/okay.wav", "https://furhat-audio.s3.eu-north-1.amazonaws.com/uh+huh.wav", "https://furhat-audio.s3.eu-north-1.amazonaws.com/yes.wav", "https://furhat-audio.s3.eu-north-1.amazonaws.com/hm.wav"]
+const acknowledgements = ["https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/okay.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/hm.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/uh huh.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/acknowledgment.wav"]
 
 const initial_prompt = `
 You are an interview coach helping the user prepare for an upcoming interview. Your goal is to help them answer questions about their personal traits and soft skills. 
-Please, be brief when talking. You need to explain your purpose. You need to first ask the user what field of employment they are interested in. If the user doesn't answer repeat the question. Please refrain from using emojis.` ;
+Please, be brief when talking. Greet the user and explain your purpose. You need to first ask the user what field of employment they are interested in. If the user doesn't answer repeat the question. Please refrain from using emojis.` ;
 
-
+const repeat = `Since the user didn't answer , say that you didn't hear them and repeat the question.`
 interface Message {
   role: "assistant" | "user" | "system";
   content: string;
@@ -38,7 +38,7 @@ async function fhSound(url: string) {
   });
 }
 
-async function fhListenTimeout(timeout=8000) {  // Default timeout is 5000 milliseconds (5 seconds)
+async function fhListenTimeout(timeout=60000) {  // Default timeout is 5000 milliseconds (5 seconds)
   const myHeaders = new Headers();
   myHeaders.append("accept", "application/json");
 
@@ -136,6 +136,332 @@ async function ListeningCarefully() {
   });
 }
 
+async function gazeRightSmile() {
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  return fetch(`http://${FURHATURI}/furhat/gesture?blocking=false`, {
+    method: "POST",
+    headers: myHeaders,
+    body: JSON.stringify({
+      "name":"Laughing",
+      "frames":[
+        {
+          "time":[0.32,7.5],
+          "persist":true, 
+          "params":{
+            "EYE_LOOK_OUT_RIGHT": 0.6,
+            "EYE_LOOK_IN_LEFT": 0.6,
+            "BROW_DOWN_LEFT": 0.5,
+            "BROW_DOWN_RIGHT": 0.5,
+            "SMILE_CLOSED": 1,
+            "NOSE_SNEER_LEFT": 0.35,
+            "NOSE_SNEER_RIGHT": 0.35,
+            "EYE_SQUINT_RIGHT": 0.6,
+            "EYE_SQUINT_LEFT": 0.6,
+          }
+        },
+        {
+          "time":[8.6],
+          "persist":true, 
+          "params":{
+            "reset":true
+            }
+        }],
+      "class":"furhatos.gestures.Gesture"
+    })
+  })
+} 
+
+
+async function gazeDown() {
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  return fetch(`http://${FURHATURI}/furhat/gesture?blocking=false`, {
+    method: "POST",
+    headers: myHeaders,
+    body: JSON.stringify({
+      "name":"Laughing",
+      "frames":[
+        {
+          "time":[0.32,6.0],
+          "persist":true, 
+          "params":{
+            "EYE_LOOK_DOWN_LEFT": 0.6,
+            "EYE_LOOK_DOWN_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time":[7.0],
+          "persist":true, 
+          "params":{
+            "reset":true
+            }
+        }],
+      "class":"furhatos.gestures.Gesture"
+    })
+  })
+} 
+
+async function gazeDownUp() {
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  return fetch(`http://${FURHATURI}/furhat/gesture?blocking=false`, {
+    method: "POST",
+    headers: myHeaders,
+    body: JSON.stringify({
+      "name":"Laughing",
+      "frames":[
+        {
+          "time": [0.32, 1.5],
+          "persist": true,
+          "params": {
+            "EYE_LOOK_DOWN_LEFT": 0.6,
+            "EYE_LOOK_DOWN_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time": [1.6],
+          "persist": true,
+          "params": {
+            "reset": true,
+          }
+        },
+        {
+          "time": [2.0, 3.2],
+          "persist": true,
+          "params": {
+            "EYE_LOOK_UP_LEFT": 0.6,
+            "EYE_LOOK_UP_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time": [3.6],
+          "persist": true,
+          "params": {
+            "reset": true,
+          }
+        }],
+      "class":"furhatos.gestures.Gesture"
+    })
+  })
+} 
+
+
+//gaze right
+async function gazeLeft() {
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  return fetch(`http://${FURHATURI}/furhat/gesture?blocking=false`, {
+    method: "POST",
+    headers: myHeaders,
+    body: JSON.stringify({
+      "name":"Laughing",
+      "frames":[
+        {
+          "time":[0.32,4.5],
+          "persist":true, 
+          "params":{
+            "EYE_LOOK_OUT_LEFT": 0.6,
+            "EYE_LOOK_IN_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time":[5.6],
+          "persist":true, 
+          "params":{
+            "reset":true
+            }
+        }],
+      "class":"furhatos.gestures.Gesture"
+    })
+  })
+} 
+
+//gaze left
+async function gazeRight() {
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  return fetch(`http://${FURHATURI}/furhat/gesture?blocking=false`, {
+    method: "POST",
+    headers: myHeaders,
+    body: JSON.stringify({
+      "name":"Laughing",
+      "frames":[
+        {
+          "time":[0.32,6.5],
+          "persist":true, 
+          "params":{
+            "EYE_LOOK_IN_LEFT": 0.6,
+            "EYE_LOOK_OUT_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time":[7.6],
+          "persist":true, 
+          "params":{
+            "reset":true
+            }
+        }],
+      "class":"furhatos.gestures.Gesture"
+    })
+  })
+}
+
+async function gazeUpDown() {
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  return fetch(`http://${FURHATURI}/furhat/gesture?blocking=false`, {
+    method: "POST",
+    headers: myHeaders,
+    body: JSON.stringify({
+      "name":"Laughing",
+      "frames":[
+        {
+          "time": [0.32, 1.5],
+          "persist": true,
+          "params": {
+            "EYE_LOOK_UP_LEFT": 0.6,
+            "EYE_LOOK_UP_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time": [1.6],
+          "persist": true,
+          "params": {
+            "reset": true,
+          }
+        },
+        {
+          "time": [2.0, 3.2],
+          "persist": true,
+          "params": {
+            "EYE_LOOK_DOWN_LEFT": 0.6,
+            "EYE_LOOK_DOWN_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time": [3.6],
+          "persist": true,
+          "params": {
+            "reset": true,
+          }
+        }],
+      "class":"furhatos.gestures.Gesture"
+    })
+  })
+}
+
+//gaze back and forth
+async function gazeLeftToRight() {
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  return fetch(`http://${FURHATURI}/furhat/gesture?blocking=true`, {
+    method: "POST",
+    headers: myHeaders,
+    body: JSON.stringify({
+      "name":"Laughing",
+      "frames":[
+        {
+          "time": [0.32, 1.5],
+          "persist": true,
+          "params": {
+            "EYE_LOOK_OUT_LEFT": 0.6,
+            "EYE_LOOK_IN_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time": [1.6],
+          "persist": true,
+          "params": {
+            "reset": true,
+          }
+        },
+        {
+          "time": [2.0, 3.2],
+          "persist": true,
+          "params": {
+            "EYE_LOOK_IN_LEFT": 0.6,
+            "EYE_LOOK_OUT_RIGHT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time": [3.6],
+          "persist": true,
+          "params": {
+            "reset": true,
+          }
+        }],
+      "class":"furhatos.gestures.Gesture"
+    })
+  })
+} 
+
+async function gazeRightToLeft() {
+  const myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  return fetch(`http://${FURHATURI}/furhat/gesture?blocking=false`, {
+    method: "POST",
+    headers: myHeaders,
+    body: JSON.stringify({
+      "name":"Laughing",
+      "frames":[
+        {
+          "time": [0.32, 1.5],
+          "persist": true,
+          "params": {
+            "EYE_LOOK_OUT_RIGHT": 0.6,
+            "EYE_LOOK_IN_LEFT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time": [1.6],
+          "persist": true,
+          "params": {
+            "reset": true,
+          }
+        },
+        {
+          "time": [2.0, 3.2],
+          "persist": true,
+          "params": {
+            "EYE_LOOK_IN_RIGHT": 0.6,
+            "EYE_LOOK_OUT_LEFT": 0.6,
+            "BROW_UP_LEFT": 0.5,
+            "BROW_UP_RIGHT": 0.5,
+          }
+        },
+        {
+          "time": [3.6],
+          "persist": true,
+          "params": {
+            "reset": true,
+          }
+        }],
+      "class":"furhatos.gestures.Gesture"
+    })
+  })
+} 
+
 async function fhGesture(text: string) {
   const myHeaders = new Headers();
   myHeaders.append("accept", "application/json");
@@ -187,20 +513,21 @@ const dmMachine = setup({
     fhL: fromPromise<any, null>(async () => {
      return Promise.all([
       fhAttend() ,
-      fhListenTimeout(),
-      getRandomFromList(acknowledgements)
+      fhListenTimeout()
      ])
    }),
    ListenCarefully: fromPromise<any, null>(async () => {
     return ListeningCarefully();
    }),
    fhGesture : fromPromise<any,any>(async () => {
-   return getRandomFunction([() => getRandomFromList(listen_gestures), ListeningCarefully]);
+    const randomAcknowledgement = await getRandomFromList(acknowledgements) ;
+   return getRandomFunction([ () => getRandomFromList(listen_gestures), ListeningCarefully,() => fhSound(randomAcknowledgement)]);
    }),
    fhSpeakG: fromPromise<any, { text: string}>(async ({ input }) => {
     return Promise.all([
       fhAttend() ,
       fhSay(input.text),
+      getRandomFunction([gazeDown, gazeDownUp, gazeLeft, gazeLeftToRight, gazeRight, gazeRightSmile, gazeRightToLeft, gazeUpDown ])
     ]);
   }),
   },
@@ -267,18 +594,21 @@ const dmMachine = setup({
     ListenField: {
       invoke: {
         src: "fhL",
-        onDone: {
-          target: "Recognised",
+        onDone: [
+          {guard :({event}) => event.output === "", target : "Repeat" },
+          {target: "Recognised",
           actions: [({ event }) => console.log(event.output),
             assign(({context,event}) => {
               return {
                 messages : [
                   ...context.messages,
                   {role : "user",
-                  content : `The field the user is interesting in is ${event.output[1]}. As an interviewer please ask the user questions about their personal traits and soft skills but not technical skills about the field . 
+                  content : `The field the user is interesting in is ${event.output[1]}. If the user's answer isn't there repeat the question. 
+                            As an interviewer please ask the user questions about their personal traits and soft skills but not technical skills about the field . 
                             Try to ask questions like "tell me a little bit about yourself","what is your strongest attribute", "tell me one time you worked in stress/in a team, one time you failed in a task,you had to persuade someone,where do you see yourself in 5 years etc. 
-                            If the user doesn't answer repeat the question.
+                            If the user asks to finish the conversation say goodbye and good luck.
                             If the user asks for help please give some guidelines.
+                            Don't ask technical questions.
                             If the user changes the topic please remind them what you are doing. Don't forget to be brief. `,
                   }
                 ]
@@ -289,8 +619,8 @@ const dmMachine = setup({
                 field : context.field +=1 
               }
             } ) ,
-            ({context}) => console.log(context.messages)
-        ]},
+            ({event}) => console.log(`This is ${event.output[0]}`)
+        ]}],
         onError: {
           target: "Fail",
           actions: ({ event }) => console.error(event),
@@ -300,21 +630,27 @@ const dmMachine = setup({
     ListenAnswer: {
       invoke: {
         src: "fhL",
-        onDone: {
-          target: "Recognised",
+        onDone: [
+          {guard :({event}) => event.output === "" , target : "Repeat" },
+          {target: "Recognised",
           actions: [({ event }) => console.log(event.output),
             assign(({context,event}) => {
               return {
                 messages : [
                   ...context.messages,
                   {role : "user",
-                  content : `The answer was ${event.output[1]}. If they asked for help answering, give some guidelines. If not please give briefly some feedback about their response and ask if they want to repeat their answer if it was an indaquate answer or move on to the next question. If they ask to move on ask another question.If the user doesn't answer repeat the question. Don't forget to ask follow up questions about what you learn.`,
+                  content : `The answer was ${event.output[1]}. If the user's answer isn't there repeat the question. If they asked for help answering, give some guidelines.
+                   If not please give briefly some feedback about their response and ask if they want to repeat their answer
+                   if it was an indaquate answer or move on to the next question. 
+                   If they ask to move on ask another question.
+                   Ask follow up questions about what you learn but also change the question after some time.
+                   If the user asks to finish the conversation say goodbye and good luck.`,
                   }
                 ]
               }
             }),
             ({context}) => console.log(context.messages)
-        ]},
+        ]}],
         onError: {
           target: "Fail",
           actions: ({ event }) => console.error(event),
@@ -329,6 +665,27 @@ const dmMachine = setup({
           }
         }
     } ,
+    Repeat : {
+      invoke: {
+        src: "ListenCarefully",
+        onDone: {
+          target: "Generate",
+          actions: [
+            assign(({ context, event }) => {
+              return {
+                messages: [
+                  ...context.messages,
+                  {
+                    role: "system",
+                    content: repeat,
+                  },
+                ],
+              };
+            }),
+          ],
+        },
+      },
+    },
     Generate: {
       invoke: {
         src: "LLMActor",
