@@ -595,6 +595,7 @@ const dmMachine = setup({
       invoke: {
         src: "fhL",
         onDone: [
+          {guard : ({context}) => context.messages[context.messages.length - 1].content.toLowerCase().includes("goodbye"), target : "Fail"},
           {guard :({event}) => event.output === "", target : "Repeat" },
           {target: "Recognised",
           actions: [({ event }) => console.log(event.output),
@@ -619,7 +620,7 @@ const dmMachine = setup({
                 field : context.field +=1 
               }
             } ) ,
-            ({event}) => console.log(`This is ${event.output[0]}`)
+            ({context}) => console.log(context.messages)
         ]}],
         onError: {
           target: "Fail",
@@ -631,6 +632,7 @@ const dmMachine = setup({
       invoke: {
         src: "fhL",
         onDone: [
+          {guard : ({context}) => context.messages[context.messages.length - 1].content.toLowerCase().includes("good luck"), target : "Fail"},
           {guard :({event}) => event.output === "" , target : "Repeat" },
           {target: "Recognised",
           actions: [({ event }) => console.log(event.output),
