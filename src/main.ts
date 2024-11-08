@@ -1,8 +1,9 @@
 import { text } from "stream/consumers";
 import { setup, createActor, fromPromise, assign } from "xstate";
 
-const FURHATURI =  "127.0.0.1:54321";
-//"192.168.1.11:54321" 
+const FURHATURI = "127.0.0.1:54321" ;
+ //"192.168.1.236:54321" ;
+
 
 async function getRandomFromList(list: string[]): Promise<string> {
   const randomIndex = Math.floor(Math.random() * list.length);
@@ -15,7 +16,7 @@ function getRandomFunction(funcs: (() => Promise<any>)[]): Promise<any> {
 }
 const listen_gestures = ['Nod', 'Smile', 'Thoughtful']
 
-const acknowledgements = ["https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/okay.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/hm.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/uh huh.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/acknowledgment.wav"]
+const acknowledgements = ["https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/okay.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/hm.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/uh-huh.wav","https://raw.githubusercontent.com/elenifysikoudi/Dialogue-Systems-2-Project/main/acknowledgment.wav"]
 
 const initial_prompt = `
 You are an interview coach helping the user prepare for an upcoming interview. Your goal is to help them answer questions about their personal traits and soft skills. 
@@ -500,7 +501,7 @@ const dmMachine = setup({
         model: "gemma2",
         messages : input.prompt,
         stream: false,
-        temperature : 0.5
+        temperature : 0.4
       };
       return fetch("http://localhost:11434/api/chat", {
         method: "POST",
@@ -518,6 +519,9 @@ const dmMachine = setup({
    }),
    ListenCarefully: fromPromise<any, null>(async () => {
     return ListeningCarefully();
+   }),
+   fhNod : fromPromise<any,any>(async () => {
+    return fhGesture('Nod')
    }),
    fhGesture : fromPromise<any,any>(async () => {
     const randomAcknowledgement = await getRandomFromList(acknowledgements) ;
@@ -597,7 +601,7 @@ const dmMachine = setup({
         onDone: [
           {guard : ({context}) => context.messages[context.messages.length - 1].content.toLowerCase().includes("goodbye"), target : "Fail"},
           {guard :({event}) => event.output === "", target : "Repeat" },
-          {target: "Recognised",
+          {target: "Recognise",
           actions: [({ event }) => console.log(event.output),
             assign(({context,event}) => {
               return {
@@ -628,12 +632,20 @@ const dmMachine = setup({
         },
       },
     },
+    Recognise : {
+      invoke : {
+        src : "fhNod",
+        onDone : {
+          target : "Generate"
+        }
+      }
+  } ,
     ListenAnswer: {
       invoke: {
         src: "fhL",
         onDone: [
           {guard : ({context}) => context.messages[context.messages.length - 1].content.toLowerCase().includes("good luck"), target : "Fail"},
-          {guard :({event}) => event.output === "" , target : "Repeat" },
+          {guard :({event}) => event.output[1] === "" , target : "Repeat" },
           {target: "Recognised",
           actions: [({ event }) => console.log(event.output),
             assign(({context,event}) => {
@@ -641,8 +653,8 @@ const dmMachine = setup({
                 messages : [
                   ...context.messages,
                   {role : "user",
-                  content : `The answer was ${event.output[1]}. If the user's answer isn't there repeat the question. If they asked for help answering, give some guidelines.
-                   If not please give briefly some feedback about their response and ask if they want to repeat their answer
+                  content : `The answer was ${event.output[1]}. The user may not answer if they don't repeat the same question don't move to the next one.If they asked for help answering, give some guidelines.
+                   If not please give briefly some feedback about how they responded and ask if they want to repeat their answer
                    if it was an indaquate answer or move on to the next question. 
                    If they ask to move on ask another question.
                    Ask follow up questions about what you learn but also change the question after some time.
