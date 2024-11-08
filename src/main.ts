@@ -608,7 +608,7 @@ const dmMachine = setup({
                 messages : [
                   ...context.messages,
                   {role : "user",
-                  content : `The field the user is interesting in is ${event.output[1]}. If the user's answer isn't there repeat the question. 
+                  content : `The field the user is interested in is ${event.output[1]}. If the user's answer isn't there repeat the question. 
                             As an interviewer please ask the user questions about their personal traits and soft skills but not technical skills about the field . 
                             Try to ask questions like "tell me a little bit about yourself","what is your strongest attribute", "tell me one time you worked in stress/in a team, one time you failed in a task,you had to persuade someone,where do you see yourself in 5 years etc. 
                             If the user asks to finish the conversation say goodbye and good luck.
